@@ -19,6 +19,9 @@ def remove_URL(sample):
     """Remove URLs from a sample string"""
     return re.sub(r"http\S+", "", sample)
 
+def strip_emoji(text):
+    new_text = re.sub(emoji.get_emoji_regexp(), r"", text)
+    return new_text
 
 labels = []
 data = []
@@ -48,6 +51,7 @@ for directory in directories:
 				body.replace("&#x200B;", "")
 				body = remove_URL(body)
 				body = remove_emoji(body)
+				body = strip_emoji(body)
 				data.append(body)
 				if directory == 'ed_subreddit_data_positive':
 					labels.append(1)
@@ -56,7 +60,7 @@ for directory in directories:
 print("ALL DONE")
 df = pd.DataFrame({"labels": labels, "post": data})
 print(df)
-df.to_csv("total_labeled_data_new")
+df.to_csv("total_labeled_data")
 
 
 
