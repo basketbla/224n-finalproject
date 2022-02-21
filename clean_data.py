@@ -4,22 +4,21 @@ import re
 import emoji
 
 
-def findURLS(string):
-  
-    # findall() has been used 
-    # with valid conditions for urls in string
-    words = []
-    for word in string: 
-    	if "http" in word or "www" in word: 
-    		words.append(word)
-    #regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
-    #url = re.findall(regex,string)      
-    #return [x[0] for x in url]
-    return words
+def remove_emoji(string):
+    emoji_pattern = re.compile("["
+                           u"\U0001F600-\U0001F64F"  # emoticons
+                           u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                           u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                           u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                           u"\U00002702-\U000027B0"
+                           u"\U000024C2-\U0001F251"
+                           "]+", flags=re.UNICODE)
+    return emoji_pattern.sub(r'', string)
 
+def remove_URL(sample):
+    """Remove URLs from a sample string"""
+    return re.sub(r"http\S+", "", sample)
 
-def extract_emojis(s):
-  return ''.join(c for c in s if c in emoji.UNICODE_EMOJI['en'])
 
 labels = []
 data = []
@@ -47,12 +46,8 @@ for directory in directories:
 				body = str(body)
 				body.replace("\n", "")
 				body.replace("&#x200B;", "")
-				urls = findURLS(body)
-				for url in urls: 
-					body.replace(url, "")
-				emojis = extract_emojis(body)
-				for e in emojis: 
-					body.replace(e, "")
+				body = remove_URL(body)
+				body = remove_emoji(body)
 				data.append(body)
 				if directory == 'ed_subreddit_data_positive':
 					labels.append(1)
@@ -61,7 +56,7 @@ for directory in directories:
 print("ALL DONE")
 df = pd.DataFrame({"labels": labels, "post": data})
 print(df)
-df.to_csv("total_labeled_data")
+df.to_csv("total_labeled_data_new")
 
 
 
