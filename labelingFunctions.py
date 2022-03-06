@@ -19,7 +19,7 @@ EDkeywords = ["binge", "binging", "purge", "purging", "fat", "anorexic", "ana", 
 
 nonEDkeywords = ["in recovery", "getting help", "am eating intuitively"]
 
-filename = "total_labeled_nonan.csv"
+filename = "FINAL_train_data.csv"
 csv = pd.read_csv(filename)
 text = csv.text.tolist()
 labels = csv.label.tolist()
@@ -31,6 +31,7 @@ for i in range(len(text)):
         
 df = pd.DataFrame({"labels": newlabels, "text": newtext});
 df_train,df_test = train_test_split(df,train_size=0.9)
+df_test = pd.concat([df_test, pd.read_csv("FINAL_labeled_test_data.csv")])
 
 
 
@@ -102,7 +103,8 @@ probs_train = label_model.predict_proba(L=L_train)
 df_train_filtered, probs_train_filtered = filter_unlabeled_dataframe(
     X=df_train, y=probs_train, L=L_train
 )
-df_train_filtered.to_csv(r'/Users/christinemanegan/Desktop/classes/CS224N/224n-finalproject/firstPassSnorkelLabels.csv', index = False, header=True)
+print(df_train_filtered)
+df_train_filtered.to_csv(r'/Users/christinemanegan/Desktop/classes/CS224N/224n-finalproject/secondPassSnorkelLabels.csv', index = False, header=True)
 
 # LFAnalysis(L=L_train, lfs=lfs).lf_summary()
 
