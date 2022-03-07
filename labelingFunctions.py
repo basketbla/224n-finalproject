@@ -10,6 +10,13 @@ import matplotlib.pyplot as plt
 from snorkel.labeling import LFAnalysis
 from snorkel.preprocess import preprocessor
 from snorkel.classification.data import DictDataset, DictDataLoader
+import text2emotion as te
+import nltk
+
+# from snorkel.preprocess.nlp import SpacyPreprocessor
+# from snorkel.labeling.lf.nlp import nlp_labeling_function
+
+nltk.download('omw-1.4')
 
 ABSTAIN = -1
 DISORDER = 1
@@ -17,7 +24,11 @@ NONDISORDER = 0
 
 EDkeywords = ["binge", "binging", "purge", "purging", "fat", "anorexic", "ana", "mia", "bulimia", "trigger warning", "tw", "compulsive", "can't stop", "please help", "body check", "starving", "feel so fat", "hate my body", "wish i was skinny", "want to be skinny", "thinspo"]
 
-nonEDkeywords = ["in recovery", "getting help", "am eating intuitively"]
+nonEDkeywords = ["in recovery", "getting help", "am eating intuitively", "victory", "victories", "haha", "good news", "good luck", "intuitive"]
+
+thirdPersonWords = ["he", "she", "they", "him", "her"]
+firstPersonWords = ["i", "me", "my"]
+
 
 filename = "FINAL_train_data.csv"
 csv = pd.read_csv(filename)
@@ -33,6 +44,8 @@ df = pd.DataFrame({"labels": newlabels, "text": newtext});
 df_train,df_test = train_test_split(df,train_size=0.9)
 df_test = pd.concat([df_test, pd.read_csv("FINAL_labeled_test_data.csv")])
 
+
+# spacy = SpacyPreprocessor(text_field="text", doc_field="doc", memoize=True)
 
 
 #print(df_train["text"].sample(20, random_state=2))
@@ -65,9 +78,67 @@ def contains_nonEDkeywords(x):
 @labeling_function()
 def lf_textblob_polarity(x):
     return NONDISORDER if TextBlob(x.text.lower()).sentiment.polarity > 0.3 else DISORDER
-    
 
-lfs = [contains_EDkeywords, contains_nonEDkeywords, lf_textblob_polarity]
+
+# @labeling_function()
+# def prelabel(x):
+# if x.label == 1:
+#     return DISORDER
+# else:
+#     return NONDISORDER
+
+@labeling_function()
+def length(x):
+    if len(x.text.split()) < 5:
+        return NONDISORDER
+    else:
+        return DISORDER
+
+@labeling_function()
+def containsPerson(x):
+    string = str(x.text).lower()
+    for word in string.split(" "):
+        if word in firstPersonWords or word in thirdPersonWords:
+            return ABSTAIN
+    return NONDISORDER
+
+@labeling_function()
+def thirdPerson(x):
+    countThirdPerson = 0
+    countFirstPerson = 0
+    string = str(x.text).lower()
+    for word in string.split(" "):
+        if word in firstPersonWords:
+            countFirstPerson += 1
+        if word in thirdPersonWords:
+            countThirdPerson += 1
+    if countThirdPerson > countFirstPerson: 
+        return NONDISORDER
+    else:
+        return ABSTAIN
+
+@labeling_function()
+def emotion(x):
+    emotion_map = te.get_emotion(x.text)
+    print(emotion_map)
+    if (emotion_map['Sad'] + emotion_map['Fear'] + emotion_map['Angry'])  > 0.9:
+        return DISORDER
+    elif (emotion_map['Happy'] > .3):
+        return NONDISORDER
+    elif (emotion_map['Surprise'] > .6):
+        return NONDISORDER
+    elif emotion_map['Sad'] > .5:
+        return DISORDER
+    elif emotion_map['Angry'] > .5:
+        return DISORDER
+    elif emotion_map['Fear'] > .5:
+        return DISORDER
+    else:
+        return ABSTAIN
+
+
+
+lfs = [emotion, length, containsPerson, thirdPerson, contains_EDkeywords, contains_nonEDkeywords, lf_textblob_polarity]
 
 applier = PandasLFApplier(lfs=lfs)
 L_train = applier.apply(df=df_train)
@@ -80,7 +151,7 @@ L_train = applier.apply(df=df_train)
 
 print(L_train)
 
-ed_keywords, noned_keywords, texblob_polarity = (L_train != ABSTAIN).mean(axis=0)
+emotion, length, containsPerson, thirdPerson, contains_EDkeywords, contains_nonEDkeywords, lf_textblob_polarity = (L_train != ABSTAIN).mean(axis=0)
 # print(f"ed_keywords coverage: {ed_keywords * 100:.1f}%")
 # print(f"noned_keywords coverage: {noned_keywords * 100:.1f}%")
 # print(f"textblob_polarity coverage: {texblob_polarity * 100:.1f}%")
@@ -104,7 +175,7 @@ df_train_filtered, probs_train_filtered = filter_unlabeled_dataframe(
     X=df_train, y=probs_train, L=L_train
 )
 print(df_train_filtered)
-df_train_filtered.to_csv(r'/Users/christinemanegan/Desktop/classes/CS224N/224n-finalproject/secondPassSnorkelLabels.csv', index = False, header=True)
+df_train_filtered.to_csv(r'/Users/christinemanegan/Desktop/classes/CS224N/224n-finalproject/fourthPassSnorkelLabels.csv', index = False, header=True)
 
 # LFAnalysis(L=L_train, lfs=lfs).lf_summary()
 
