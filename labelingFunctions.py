@@ -62,7 +62,6 @@ def contains_EDkeywords(x):
 def contains_nonEDkeywords(x):
     string = str(x.text).lower()
     for keyword in nonEDkeywords:
-        print(x.text.lower())
         if keyword in string:
             return NONDISORDER
     return ABSTAIN
@@ -120,7 +119,6 @@ def thirdPerson(x):
 @labeling_function()
 def emotion(x):
     emotion_map = te.get_emotion(x.text)
-    print(emotion_map)
     if (emotion_map['Sad'] + emotion_map['Fear'] + emotion_map['Angry'])  > 0.9:
         return DISORDER
     elif (emotion_map['Happy'] > .3):
