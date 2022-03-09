@@ -7,7 +7,7 @@ true_result = pd.read_csv("FINAL_labeled_test_data.csv")
 true_result_labels = true_result.label.to_list();
 true_result_text = true_result.text.to_list();
 
-test_result = pd.read_csv("Snorkel_Second_Pass_Output.csv")
+test_result = pd.read_csv("bert_base_snorkel_4_preds.csv")
 test_result_labels = test_result.label.to_list();
 
 fp = 0
@@ -25,4 +25,4 @@ for i in range(len(true_result_labels)):
 		text.append(true_result_text[i])
 		issue.append("fp")
 df = pd.DataFrame({"fp/fn": issue, "text": text})
-df.to_csv("secondSnorkelPassAnalysis.csv")
+df.to_csv("bert_base_snorkel_4_analysis.csv")
