@@ -67,12 +67,12 @@ def contains_nonEDkeywords(x):
     return ABSTAIN
 
 #USE THIS FOR ANOTHER TEST: SEMI-ARBITRARY LABELS
-#@labeling_function()
-#def prelabel(x):
-#	if x.label == 1:
-#		return DISORDER
-#	else:
-#		return NONDISORDER
+@labeling_function()
+def prelabel(x):
+    if x.labels == 1:
+        return DISORDER
+    else:
+        return NONDISORDER
   
 @labeling_function()
 def lf_textblob_polarity(x):
@@ -88,10 +88,10 @@ def lf_textblob_polarity(x):
 
 @labeling_function()
 def length(x):
-    if len(x.text.split()) < 5:
+    if len(x.text.split()) <= 5:
         return NONDISORDER
     else:
-        return DISORDER
+        return ABSTAIN
 
 @labeling_function()
 def containsPerson(x):
@@ -136,7 +136,7 @@ def emotion(x):
 
 
 
-lfs = [emotion, length, containsPerson, thirdPerson, contains_EDkeywords, contains_nonEDkeywords, lf_textblob_polarity]
+lfs = [emotion, length, containsPerson, thirdPerson, prelabel, lf_textblob_polarity]
 
 applier = PandasLFApplier(lfs=lfs)
 L_train = applier.apply(df=df_train)
@@ -149,7 +149,7 @@ L_train = applier.apply(df=df_train)
 
 print(L_train)
 
-emotion, length, containsPerson, thirdPerson, contains_EDkeywords, contains_nonEDkeywords, lf_textblob_polarity = (L_train != ABSTAIN).mean(axis=0)
+emotion, length, containsPerson, thirdPerson, prelabel, lf_textblob_polarity = (L_train != ABSTAIN).mean(axis=0)
 # print(f"ed_keywords coverage: {ed_keywords * 100:.1f}%")
 # print(f"noned_keywords coverage: {noned_keywords * 100:.1f}%")
 # print(f"textblob_polarity coverage: {texblob_polarity * 100:.1f}%")
@@ -158,7 +158,7 @@ from snorkel.labeling import LFAnalysis
 
 analysis_df = LFAnalysis(L=L_train, lfs=lfs).lf_summary()
 
-# analysis_df.to_csv(r'/Users/christinemanegan/Desktop/classes/CS224N/224n-finalproject/firstPassLearningFuncsAnalysis.csv', index = False, header=True)
+analysis_df.to_csv(r'/Users/christinemanegan/Desktop/classes/CS224N/224n-finalproject/fifthPassLearningFuncsAnalysis.csv', index = False, header=True)
 
 from snorkel.labeling.model import LabelModel
 
